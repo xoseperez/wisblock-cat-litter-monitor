@@ -182,9 +182,6 @@ void setup() {
 
 void loop() {
 
-	static unsigned long start = 0;
-	bool back_to_sleep = false;
-
 	// Sleep until we are woken up by an event
 	if (xSemaphoreTake(taskEvent, portMAX_DELAY) == pdTRUE)	{	
 	
@@ -198,42 +195,24 @@ void loop() {
 			digitalWrite(LED_BUILTIN, HIGH);
 		#endif
 		
-		// Timer
+		// Sensor warmup
 		#if SENSOR_MQ135_ENABLE
 		if (2 == eventType) {
-			if (0 == start) {
-				start = millis();
-			} else if ((millis() - start) > SENSOR_MQ135_WARMUP_MS) {
-				send();
-				start = 0;
-				back_to_sleep = true;
-			}
-		}
-		#else
-		if (2 == eventType) {
-			send();
-			back_to_sleep = true;
+			sensors_power(true);
+			utils_delay(SENSOR_MQ135_WARMUP_MS);
 		}
 		#endif
 		
-		// Interrupt
-		if (3 == eventType) {
-			send();
-			back_to_sleep = true;
-		}
-
-		if (back_to_sleep) {
-
-			// Switch off blue LED
-			#ifdef DEVELOPMENT
-				digitalWrite(LED_BUILTIN, LOW);
-			#endif
-			
-			// Go back to sleep
-			eventType = 0;
-			xSemaphoreTake(taskEvent, 10);
+		if ((2 == eventType) || (3 == eventType)) send();
 		
-		}	
+		// Switch off blue LED
+		#ifdef DEVELOPMENT
+			digitalWrite(LED_BUILTIN, LOW);
+		#endif
+		
+		// Go back to sleep
+		eventType = 0;
+		xSemaphoreTake(taskEvent, 10);
 
 	}
 

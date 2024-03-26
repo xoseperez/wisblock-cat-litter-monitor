@@ -47,7 +47,7 @@ v1.0 - First release
 /// from "Globally averaged marine surface monthly mean data"
 /// available at https://gml.noaa.gov/ccgg/trends/gl_data.html
 #define ATMOCO2 415.58 // Global CO2 Aug 2022
-#define ATMONH4 1 // https://en.air-q.com/messwerte/ammoniak
+#define ATMONH4 1.00 // https://en.air-q.com/messwerte/ammoniak
 
 class MQ135 {
  private:

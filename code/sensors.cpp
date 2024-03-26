@@ -115,9 +115,9 @@ void sensors_read() {
 	_sensors_nh3 = 0;
 	if (_sensors_mq135_ready) {
 		#if SENSOR_SHTC3_ENABLE
-		_sensors_nh3 = _sensors_mq135.getCorrectedPPM(_sensors_temperature, _sensors_humidity);
+		_sensors_nh3 = round(_sensors_mq135.getCorrectedPPM(_sensors_temperature, _sensors_humidity));
 		#else
-		_sensors_nh3 = _sensors_mq135.getPPM();
+		_sensors_nh3 = round(_sensors_mq135.getPPM());
 		#endif
 	}
 	#endif

@@ -41,7 +41,7 @@
 #define SENSOR_SGP40_ENABLE             0
 #define SENSOR_MQ135_ENABLE             1
 
-#define SENSOR_MQ135_GPIO               WB_A0
+#define SENSOR_MQ135_GPIO               WB_A1
 #define SENSOR_MQ135_RZERO              16.28
 #define SENSOR_MQ135_RLOAD              5.00
 #define SENSOR_MQ135_WARMUP_MS          (60*1000)
