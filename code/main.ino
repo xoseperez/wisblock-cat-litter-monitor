@@ -39,7 +39,7 @@ CayenneLPP lpp(25);
 void periodicWakeup(TimerHandle_t unused) {
 	
 	// Set the event type to timer wakeup	
-	eventType = 2;
+	if (0 == eventType) eventType = 2;
 	
 	// Give the semaphore, so the loop task will wake up
 	xSemaphoreGiveFromISR(taskEvent, pdFALSE);
@@ -49,7 +49,7 @@ void periodicWakeup(TimerHandle_t unused) {
 void interruptWakeup() {
 	
 	// Set the event type to timer wakeup	
-	eventType = 3;
+	if (0 == eventType) eventType = 3;
 	
 	// Give the semaphore, so the loop task will wake up
 	xSemaphoreGiveFromISR(taskEvent, pdFALSE);
@@ -75,7 +75,7 @@ void receive_callback(lorawan_message_type type, lmh_app_data_t * data) {
 
 		case LORAWAN_TYPE_DOWNLINK:
 			//logWrite(LOG_INFO, "MAIN", "Downlink received: %d", data->buffer);
-			eventType = 1;
+			if (0 == eventType) eventType = 1;
 			xSemaphoreGive(taskEvent);		
 			break;
 
@@ -90,18 +90,32 @@ void receive_callback(lorawan_message_type type, lmh_app_data_t * data) {
 // Entrypoints
 // ----------------------------------------------------------------------------
 
-void send(void) {
+void send() {
 
 	sensors_power(true);
 	sensors_read();
     
 	lpp.reset();
 	lpp.addVoltage(1, battery_read() / 1000.0);
-	lpp.addTemperature(2, sensors_temperature());
-	lpp.addRelativeHumidity(3, sensors_humidity());
-	lpp.addConcentration(4, sensors_voc_raw());
-	lpp.addConcentration(5, sensors_voc_index());
-	lpp.addDigitalInput(6, !digitalRead(INTERRUPT_GPIO));
+
+	#ifdef INTERRUPT_GPIO
+	lpp.addDigitalInput(2, !digitalRead(INTERRUPT_GPIO));
+	#endif
+
+	#if SENSOR_SHTC3_ENABLE
+	lpp.addTemperature(3, sensors_temperature());
+	lpp.addRelativeHumidity(4, sensors_humidity());
+	#endif
+	#if SENSOR_SGP40_ENABLE
+	lpp.addConcentration(5, sensors_voc_raw());
+	lpp.addConcentration(6, sensors_voc_index());
+	#endif
+	#if SENSOR_MQ135_ENABLE
+	if (2 == eventType) {
+		lpp.addConcentration(7, sensors_nh3());
+	}
+	#endif
+
 	lorawan_send(lpp.getBuffer(), lpp.getSize());
 
 	sensors_power(false);
@@ -125,7 +139,9 @@ void setup() {
 	digitalWrite(LED_CONN, LOW);
 	
     // Setup the watchdog timer
+	#ifdef WDT_SECONDS
     wdt_setup(WDT_SECONDS);
+	#endif
 
     // Initialize serial communications and wait for port to open
     Serial.begin(115200);
@@ -166,29 +182,59 @@ void setup() {
 
 void loop() {
 
+	static unsigned long start = 0;
+	bool back_to_sleep = false;
+
 	// Sleep until we are woken up by an event
 	if (xSemaphoreTake(taskEvent, portMAX_DELAY) == pdTRUE)	{	
 	
 		// WDT
+		#ifdef WDT_SECONDS
 		wdt_feed();
+		#endif
 		
 		// Switch on blue LED to show we are awake
 		#ifdef DEVELOPMENT
 			digitalWrite(LED_BUILTIN, HIGH);
 		#endif
 		
-        // Send message on timer event
-		if ((2 == eventType) || (3 == eventType)) send();
-		eventType = 0;
-
-		// Switch off blue LED
-		#ifdef DEVELOPMENT
-			digitalWrite(LED_BUILTIN, LOW);
+		// Timer
+		#if SENSOR_MQ135_ENABLE
+		if (2 == eventType) {
+			if (0 == start) {
+				start = millis();
+			} else if ((millis() - start) > SENSOR_MQ135_WARMUP_MS) {
+				send();
+				start = 0;
+				back_to_sleep = true;
+			}
+		}
+		#else
+		if (2 == eventType) {
+			send();
+			back_to_sleep = true;
+		}
 		#endif
 		
-		// Go back to sleep
-		xSemaphoreTake(taskEvent, 10);
-	
+		// Interrupt
+		if (3 == eventType) {
+			send();
+			back_to_sleep = true;
+		}
+
+		if (back_to_sleep) {
+
+			// Switch off blue LED
+			#ifdef DEVELOPMENT
+				digitalWrite(LED_BUILTIN, LOW);
+			#endif
+			
+			// Go back to sleep
+			eventType = 0;
+			xSemaphoreTake(taskEvent, 10);
+		
+		}	
+
 	}
 
 }

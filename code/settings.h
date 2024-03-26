@@ -31,21 +31,48 @@
 
 #include "credentials.h"
 
+// ---------------------------------------------------
+// Sensors
+// ---------------------------------------------------
+
+#define SENSOR_POWER_GPIO               WB_IO2
+
+#define SENSOR_SHTC3_ENABLE             0
+#define SENSOR_SGP40_ENABLE             0
+#define SENSOR_MQ135_ENABLE             1
+
+#define SENSOR_MQ135_GPIO               WB_A0
+#define SENSOR_MQ135_RZERO              16.28
+#define SENSOR_MQ135_RLOAD              5.00
+#define SENSOR_MQ135_WARMUP_MS          (60*1000)
+
 // ----------------------------------------------------------------------------
 // Sending
 // ----------------------------------------------------------------------------
 
+#if SENSOR_MQ135_ENABLE
+
 #ifdef PRODUCTION
-#define READ_INTERVAL_SECONDS           (60*5)
+#define READ_INTERVAL_SECONDS           (60*60)
 #else
-#define READ_INTERVAL_SECONDS           (60*1)
+#define READ_INTERVAL_SECONDS           (5*60)
+#endif
+
+#else
+
+#ifdef PRODUCTION
+#define READ_INTERVAL_SECONDS           (5*60)
+#else
+#define READ_INTERVAL_SECONDS           (1*60)
+#endif
+
 #endif
 
 // ----------------------------------------------------------------------------
 // Watchdog timer
 // ----------------------------------------------------------------------------
 
-#define WDT_SECONDS                     (READ_INTERVAL_SECONDS+10)
+//#define WDT_SECONDS                     (READ_INTERVAL_SECONDS+10)
 
 // ----------------------------------------------------------------------------
 // States et al.
@@ -60,7 +87,7 @@ enum {
 // Sleep interrupt
 // ----------------------------------------------------------------------------
 
-#define INTERRUPT_GPIO                  WB_IO6
+//#define INTERRUPT_GPIO                  WB_IO6
 #define INTERRUPT_TRIGGER               CHANGE
 
 // ----------------------------------------------------------------------------
@@ -76,12 +103,6 @@ enum {
 
 #define BATT_MIN_MV                     3300
 #define BATT_MAX_MV                     4100
-
-// ---------------------------------------------------
-// Sensors
-// ---------------------------------------------------
-
-#define SENSOR_POWER_GPIO               WB_IO2
 
 #endif // _SETTINGS_H
 
