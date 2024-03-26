@@ -93,6 +93,7 @@ void receive_callback(lorawan_message_type type, lmh_app_data_t * data) {
 void send() {
 
 	sensors_power(true);
+	sensors_sleep(false);
 	sensors_read();
     
 	lpp.reset();
@@ -118,6 +119,7 @@ void send() {
 
 	lorawan_send(lpp.getBuffer(), lpp.getSize());
 
+	sensors_sleep(true);
 	sensors_power(false);
 
 }
@@ -162,6 +164,7 @@ void setup() {
 	sensors_power(true);
 	battery_setup();
     sensors_setup();
+	sensors_sleep(true);
 	sensors_power(false);
 
 	// Take the semaphore so the loop will go to sleep until an event happens
@@ -198,6 +201,7 @@ void loop() {
 		// Sensor warmup
 		#if SENSOR_MQ135_ENABLE
 		if (2 == eventType) {
+			logWrite(LOG_INFO, "MAIN", "Warming up MQ135 sensor for %d seconds", SENSOR_MQ135_WARMUP_MS / 1000 );
 			sensors_power(true);
 			utils_delay(SENSOR_MQ135_WARMUP_MS);
 		}

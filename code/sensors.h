@@ -4,6 +4,7 @@
 #include "settings.h"
 
 void sensors_power(bool power);
+void sensors_sleep(bool sleep);
 
 #if SENSOR_MQ135_ENABLE
 uint16_t sensors_nh3();
