@@ -1,7 +1,7 @@
 $fn=50;
 
 WALL_THICKNESS = 2;
-BOX_LENGTH = 64; // should be 60 im v2
+BOX_LENGTH = 64+20; // should be 60 im v2
 BOX_WIDTH = 34;
 BOX_HEIGHT = 25;
 EAR_DISTANCE = 10;
@@ -96,7 +96,7 @@ module sma_hole() {
 }
 
 module vents() {
-    max_x = floor(BOX_LENGTH / VENT_RADIUS / 3);
+    max_x = floor(BOX_WIDTH / VENT_RADIUS / 3);
     max_y = floor(BOX_WIDTH / VENT_RADIUS / 3);
     shift = 0;
     for (x=[0:1:max_x]) {
@@ -107,17 +107,27 @@ module vents() {
     }
 }
 
+module mq135() {
+    union() {
+        translate([2,2,0]) circle(1.5);
+        translate([32-2,2,0]) circle(1.5);
+        translate([32-2,20-2,0]) circle(1.5);
+        translate([2,20-2,0]) circle(1.5);
+        translate([13,10,0]) circle(21/2);
+    }
+}
 module wisblock_box() {
     height=18;
     difference() {
         box(height);
-        //translate([-1,WALL_THICKNESS+BOX_WIDTH/2,height-(WALL_THICKNESS+FOOT_HEIGHT+2)+3]) rotate([90,0,90]) usb_hole();
+        translate([-1,WALL_THICKNESS+BOX_WIDTH/2,height-(WALL_THICKNESS+FOOT_HEIGHT+2)+3]) rotate([90,0,90]) usb_hole();
         //translate([BOX_LENGTH/2+WALL_THICKNESS+8,-1,height-(WALL_THICKNESS+FOOT_HEIGHT+2)]) rotate([90,0,0]) sma_hole();
-        linear_extrude(WALL_THICKNESS+1) vents();
+        translate([40,0,0]) linear_extrude(WALL_THICKNESS+1) vents();
+        translate([4,BOX_WIDTH/2-10+WALL_THICKNESS,0]) linear_extrude(WALL_THICKNESS+1) mq135();
     }
 }
 
 //base();
 //battery_box();
 wisblock_box();        
-//vents();
+//mq135();
