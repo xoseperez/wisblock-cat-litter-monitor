@@ -1,5 +1,7 @@
 #include "log.h"
 
+#if DEBUG_LEVEL > 0
+
 // ----------------------------------------------------------------------------
 // Module variables
 // ----------------------------------------------------------------------------
@@ -51,3 +53,11 @@ void logWriteRaw(unsigned char level, const char * message, ...) {
 
 }
 
+#else
+
+void logSetup(Print * output) {}
+void logLevel(unsigned char minlevel) {}
+void logWrite(unsigned char level, const char * type, const char * message, ...) {}
+void logWriteRaw(unsigned char level, const char * message, ...) {}
+
+#endif

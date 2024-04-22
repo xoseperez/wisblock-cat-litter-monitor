@@ -139,23 +139,23 @@ void setup() {
 	// Disable blue LED
 	pinMode(LED_CONN, OUTPUT);
 	digitalWrite(LED_CONN, LOW);
-	
+
     // Setup the watchdog timer
 	#ifdef WDT_SECONDS
     wdt_setup(WDT_SECONDS);
 	#endif
 
-    // Initialize serial communications and wait for port to open
-    Serial.begin(115200);
-	#ifdef DEVELOPMENT
+	// Initialize serial communications and wait for port to open
+	#if DEBUG_LEVEL > 0
+	    Serial.begin(115200);
     	while ((!Serial) && (millis() < 1000));
     	utils_delay(500);
 	#endif
 
-    // Setup log
-    logSetup(&Serial);
-    logLevel(DEBUG_LEVEL);
-    logWrite(LOG_INFO, "MAIN", "%s %s", APP_NAME, APP_VERSION);
+	// Setup log
+	logSetup(&Serial);
+	logLevel(DEBUG_LEVEL);
+	logWrite(LOG_INFO, "MAIN", "%s %s", APP_NAME, APP_VERSION);
 
     // Set LoRa radio to low power
     lorawan_setup(receive_callback);
@@ -168,7 +168,8 @@ void setup() {
 	sensors_power(false);
 
 	// Take the semaphore so the loop will go to sleep until an event happens
-	xSemaphoreTake(taskEvent, 10);
+	//xSemaphoreTake(taskEvent, 10);
+	eventType = 2;
 	
 	// Start the timer that will wakeup the loop frequently
     taskWakeupTimer.begin(READ_INTERVAL_SECONDS * 1000, periodicWakeup);
