@@ -37,9 +37,9 @@
 
 #define SENSOR_POWER_GPIO               WB_IO2
 
-#define SENSOR_SHTC3_ENABLE             0
-#define SENSOR_SGP40_ENABLE             0
-#define SENSOR_MQ135_ENABLE             1
+#define SENSOR_SHTC3_ENABLE             1 // RAK1901
+#define SENSOR_SGP40_ENABLE             0 // RAK12047
+#define SENSOR_MQ135_ENABLE             0
 
 #define SENSOR_MQ135_GPIO               WB_A1
 #define SENSOR_MQ135_RZERO              16.28
