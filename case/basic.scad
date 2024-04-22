@@ -117,7 +117,7 @@ module mq135() {
     }
 }
 module wisblock_box() {
-    height=18;
+    height=25;
     difference() {
         box(height);
         translate([-1,WALL_THICKNESS+BOX_WIDTH/2,height-(WALL_THICKNESS+FOOT_HEIGHT+2)+3]) rotate([90,0,90]) usb_hole();
