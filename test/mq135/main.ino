@@ -1,29 +1,38 @@
 #include <SPI.h>
 #include "MQ135.h"
+#include "ADC_SGM58031.h"
 
 //#define RZERO 76.63
 #define RZERO 16.28
 #define RLOAD 5.0
 
-MQ135 mq135_sensor(WB_A0, RZERO, RLOAD);
-float temperature = 18.0;
+MQ135 mq135_sensor(0, RZERO, RLOAD);
+RAK_ADC_SGM58031 sgm58031(SGM58031_SDA_ADDRESS);
+float temperature = 25.0;
 float humidity = 50.0;
 
 void setup() {
     Serial.begin(115200);
     analogReference(AR_INTERNAL_3_0);
     analogReadResolution(12);
+    pinMode(WB_IO2, OUTPUT);
+    digitalWrite(WB_IO2, HIGH);
+    delay(300);
+		sgm58031.begin();
+		sgm58031.setConfig(0xC2E0);
+
+   
 }
 
 void loop() {
 
+  uint16_t analog = sgm58031.getAdcValue() >> 3;
+  mq135_sensor.setReading(analog);
   float rzero = mq135_sensor.getRZero(ATMONH4);
   float correctedRZero = mq135_sensor.getCorrectedRZero(ATMONH4, temperature, humidity);
   float resistance = mq135_sensor.getResistance();
   float ppm = mq135_sensor.getPPM();
   float correctedPPM = mq135_sensor.getCorrectedPPM(temperature, humidity);
-
-  float analog= analogRead(WB_A0);
 
   Serial.print("Reading: ");
   Serial.print(analog);
