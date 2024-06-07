@@ -5,10 +5,10 @@
 #include "log.h"
 
 /** Semaphore used by events to wake up loop task */
-SemaphoreHandle_t loraEvent = NULL;
+SemaphoreHandle_t _lorawan_semaphore = NULL;
 
 /** LoRa task handle */
-TaskHandle_t lorawan_task_handle;
+TaskHandle_t _lorawan_task_handle;
 
 void (*_lorawan_message)(lorawan_message_type type, lmh_app_data_t * data);
 void lorawan_sleep();
@@ -103,8 +103,8 @@ static uint8_t lorawan_get_battery_level(void) {
 static void lora_interrupt_handler(void) {
 
 	// Wake up LoRa task
-	if (loraEvent != NULL) {
-		xSemaphoreGiveFromISR(loraEvent, pdFALSE);
+	if (_lorawan_semaphore != NULL) {
+		xSemaphoreGiveFromISR(_lorawan_semaphore, pdFALSE);
 	}
 
 }
@@ -117,7 +117,7 @@ void lorawan_sleep() {
 	//Radio.Sleep();	
 
     // Send LoRa handler back to sleep
-    xSemaphoreTake(loraEvent, 10);	
+    xSemaphoreTake(_lorawan_semaphore, 10);	
 
 }
 
@@ -145,7 +145,7 @@ bool lorawan_send(unsigned char * data, unsigned char len, unsigned char port, l
 	lmh_error_status error = lmh_send(&m_lora_app_data, LORAWAN_CONFIRM);
 
 	// Allow IRQ processing
-	xSemaphoreGive(loraEvent);
+	xSemaphoreGive(_lorawan_semaphore);
 
 	return (error == LMH_SUCCESS);
 
@@ -155,7 +155,7 @@ void lorawan_task(void *pvParameters) {
 
 	while(true) {
 
-        if (xSemaphoreTake(loraEvent, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(_lorawan_semaphore, portMAX_DELAY) == pdTRUE) {
 			
 			// Handle Radio events
 			Radio.IrqProcessAfterDeepSleep();
@@ -177,10 +177,10 @@ static lmh_callback_t lora_callbacks = {
 bool lorawan_setup(void (*lorawan_message)(lorawan_message_type type, lmh_app_data_t * data)) {
     
     // Create the LoRaWan event semaphore
-	loraEvent = xSemaphoreCreateBinary();
+	_lorawan_semaphore = xSemaphoreCreateBinary();
 	
 	// Initialize semaphore
-	xSemaphoreGive(loraEvent);
+	xSemaphoreGive(_lorawan_semaphore);
 
 	// Set callback
 	_lorawan_message = lorawan_message;
@@ -204,7 +204,7 @@ bool lorawan_setup(void (*lorawan_message)(lorawan_message_type type, lmh_app_da
 	attachInterrupt(PIN_LORA_DIO_1, lora_interrupt_handler, RISING);
 	
 	// Background task
-	if (!xTaskCreate(lorawan_task, "LORA", 8192, NULL, TASK_PRIO_NORMAL, &lorawan_task_handle)) {
+	if (!xTaskCreate(lorawan_task, "LORA", 8192, NULL, TASK_PRIO_NORMAL, &_lorawan_task_handle)) {
 		logWrite(LOG_INFO, "LORA", "Failed to start lorawan task");
 		return false;
 	}
