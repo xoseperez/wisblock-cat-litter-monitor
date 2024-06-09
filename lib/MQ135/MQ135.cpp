@@ -64,7 +64,7 @@ float MQ135::getCorrectionFactor(float t, float h) {
 */
 /**************************************************************************/
 float MQ135::getResistance() {
-  int val = analogRead(_pin);
+  int val = (_pin == 0 ) ? _reading : analogRead(_pin);
   if (val == 0) val = 1;
   return ((4095./(float)val) - 1.)*_rload;
 }
@@ -134,4 +134,9 @@ float MQ135::getRZero(float expected) {
 /**************************************************************************/
 float MQ135::getCorrectedRZero(float expected, float t, float h) {
   return getCorrectedResistance(t, h) * pow((expected/PARA), (1./PARB));
+}
+
+
+void MQ135::setReading(uint16_t value) {
+  _reading = value; 
 }

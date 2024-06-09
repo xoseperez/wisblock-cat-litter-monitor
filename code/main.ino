@@ -162,6 +162,7 @@ void setup() {
 
     // Init sensors
 	sensors_power(true);
+	utils_delay(300);
 	battery_setup();
     sensors_setup();
 	sensors_sleep(true);
@@ -202,9 +203,9 @@ void loop() {
 		// Sensor warmup
 		#if SENSOR_MQ135_ENABLE
 		if (2 == eventType) {
-			logWrite(LOG_INFO, "MAIN", "Warming up MQ135 sensor for %d seconds", SENSOR_MQ135_WARMUP_MS / 1000 );
+			logWrite(LOG_INFO, "MAIN", "Warming up MQ135 sensor for %d seconds", SENSOR_MQ135_WARMUP_SECONDS );
 			sensors_power(true);
-			utils_delay(SENSOR_MQ135_WARMUP_MS);
+			utils_delay(SENSOR_MQ135_WARMUP_SECONDS * 1000);
 		}
 		#endif
 		

@@ -37,14 +37,23 @@
 
 #define SENSOR_POWER_GPIO               WB_IO2
 
-#define SENSOR_SHTC3_ENABLE             1 // RAK1901
+#define SENSOR_SHTC3_ENABLE             0 // RAK1901
 #define SENSOR_SGP40_ENABLE             0 // RAK12047
-#define SENSOR_MQ135_ENABLE             0
+#define SENSOR_MQ135_ENABLE             1
+#define SENSOR_MQ135_SGM58031_ENABLE    1
 
+#if SENSOR_MQ135_SGM58031_ENABLE
+#define SENSOR_MQ135_GPIO               0
+#else
 #define SENSOR_MQ135_GPIO               WB_A1
-#define SENSOR_MQ135_RZERO              16.28
+#endif
+#define SENSOR_MQ135_RZERO              27.51
 #define SENSOR_MQ135_RLOAD              5.00
-#define SENSOR_MQ135_WARMUP_MS          (60*1000)
+#ifdef PRODUCTION
+#define SENSOR_MQ135_WARMUP_SECONDS     (60)
+#else
+#define SENSOR_MQ135_WARMUP_SECONDS     (60)
+#endif
 
 // ----------------------------------------------------------------------------
 // Sending
@@ -55,7 +64,7 @@
 #ifdef PRODUCTION
 #define READ_INTERVAL_SECONDS           (60*60)
 #else
-#define READ_INTERVAL_SECONDS           (5*60)
+#define READ_INTERVAL_SECONDS           (10*60)
 #endif
 
 #else

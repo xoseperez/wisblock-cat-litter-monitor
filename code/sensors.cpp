@@ -18,6 +18,10 @@
 #include "MQ135.h"
 #endif
 
+#if SENSOR_MQ135_SGM58031_ENABLE
+#include "ADC_SGM58031.h"
+#endif
+
 // ----------------------------------------------------------------------------
 // Private variables
 // ----------------------------------------------------------------------------
@@ -41,6 +45,10 @@ uint16_t _sensors_nh3 = 0;
 MQ135 _sensors_mq135(SENSOR_MQ135_GPIO, SENSOR_MQ135_RZERO, SENSOR_MQ135_RLOAD);
 #endif
 
+#if SENSOR_MQ135_SGM58031_ENABLE
+bool _sensors_sgm58031_ready = false;
+RAK_ADC_SGM58031 _sensors_sgm58031(SGM58031_SDA_ADDRESS);
+#endif
 
 // ----------------------------------------------------------------------------
 // Public methods
@@ -69,6 +77,14 @@ void sensors_sleep(bool sleep) {
 
 	#if SENSOR_MQ135_ENABLE
 	// Nothing to do
+	#endif
+
+	#if SENSOR_MQ135_SGM58031_ENABLE
+	if (!sleep) {
+		_sensors_sgm58031.begin();
+		_sensors_sgm58031.setConfig(0xC2E0);
+		_sensors_sgm58031_ready = true;
+	}
 	#endif
 
 	utils_delay(100);
@@ -116,11 +132,16 @@ void sensors_read() {
 	#endif
 
 	#if SENSOR_MQ135_ENABLE
+		#if SENSOR_MQ135_SGM58031_ENABLE
+			if (_sensors_sgm58031_ready) {
+				_sensors_mq135.setReading(_sensors_sgm58031.getAdcValue() >> 3); // 15 to 12 bits depth
+			}
+		#endif
 		#if SENSOR_SHTC3_ENABLE
 			if (_sensors_shtc3_ready) {
-				_sensors_nh3 = round(_sensors_mq135.getCorrectedPPM(_sensors_temperature, _sensors_humidity));
+				_sensors_nh3 = round(100.0*_sensors_mq135.getCorrectedPPM(_sensors_temperature, _sensors_humidity));
 			} else {
-				_sensors_nh3 = round(_sensors_mq135.getPPM());
+				_sensors_nh3 = round(100.0*_sensors_mq135.getPPM());
 			}
 		#else
 			_sensors_nh3 = round(_sensors_mq135.getPPM());
@@ -153,6 +174,17 @@ bool sensors_setup() {
 
 	#if SENSOR_MQ135_ENABLE
 		// Nothing to do
+	#endif
+
+	#if SENSOR_MQ135_SGM58031_ENABLE
+		_sensors_sgm58031.begin();
+		if (_sensors_sgm58031.getChipID() != DEVICE_ID) {
+			logWrite(LOG_ERROR, "SNS", "SGM58031 init failed");
+		} else {
+			_sensors_sgm58031_ready = true;
+			_sensors_sgm58031.setConfig(0xC2E0);             // Write config, OS=1, AIN0 to GND, G=(+/-4.096V input range)
+		}
+		all_ready &= _sensors_sgm58031_ready;
 	#endif
 
 	return all_ready;

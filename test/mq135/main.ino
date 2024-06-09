@@ -3,13 +3,13 @@
 #include "ADC_SGM58031.h"
 
 //#define RZERO 76.63
-#define RZERO 16.28
+#define RZERO 27.51
 #define RLOAD 5.0
 
 MQ135 mq135_sensor(0, RZERO, RLOAD);
 RAK_ADC_SGM58031 sgm58031(SGM58031_SDA_ADDRESS);
 float temperature = 25.0;
-float humidity = 50.0;
+float humidity = 70.0;
 
 void setup() {
     Serial.begin(115200);
